@@ -1,23 +1,28 @@
 protected Properties getEnvProps() throws Exception {
     Properties props = new Properties();
     String propFile = "";
-    String envName = System.getProperty("env_name");
+    
+    try {
+        String envName = System.getProperty("env_name");
+        Logger.info("env name is : " + envName);
 
-    Logger.info("env name is : " + envName);
-
-    if (envName != null) {
-        propFile = envName + "_env.properties";
-    } else {
-        propFile = "dev_ws_env.properties";
-    }
-
-    Logger.info("env properties file name ==> " + propFile);
-
-    try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("/WEB-INF/" + propFile)) {
-        if (is == null) {
-            throw new FileNotFoundException("Property file not found: " + propFile);
+        if (envName != null) {
+            propFile = envName + "_env.properties";
+        } else {
+            propFile = "dev_ws_env.properties";
         }
-        props.load(is);
+
+        Logger.info("env properties file name ==> " + propFile);
+
+        try (InputStream is = Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResourceAsStream("/WEB-INF/" + propFile)) {
+            if (is == null) {
+                throw new FileNotFoundException("Property file not found: " + propFile);
+            }
+            props.load(is);
+        }
+
     } catch (Exception ex) {
         Logger.error("failed to load properties.");
         throw new Exception("Error: failed to load properties.", ex);
