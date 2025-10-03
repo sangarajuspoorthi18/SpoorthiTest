@@ -1,35 +1,27 @@
-public MultipleDdaAccountDetails insertARBoxDDAProperty(MultipleDdaAccountDetails detail, long uid) throws DAOException {
-    int ddaSeq = -1;
+protected Properties getEnvProps() throws Exception {
+    Properties props = new Properties();
+    String propFile = "";
+    String envName = System.getProperty("env_name");
 
-    try (Connection conn = getConnection();
-         Statement st = conn.createStatement();
-         ResultSet rs = st.executeQuery(SQLStatements.getDDAIDSequenceSQL())) {
+    Logger.info("env name is : " + envName);
 
-        if (rs.next()) {
-            ddaSeq = rs.getInt(1);
-            detail.setDdaSeqNum(String.valueOf(ddaSeq));
-        }
-
-        try (PreparedStatement stmt = conn.prepareStatement(SQLStatements.getDDAxAccountInfoInsertSQL())) {
-            stmt.setLong(1, ddaSeq);
-            stmt.setLong(2, Long.parseLong(detail.getSeqNum()));
-            stmt.setLong(3, Long.parseLong(detail.getClientId()));
-            stmt.setString(4, detail.getDdaId());
-            stmt.setString(5, detail.getDdaIdDesc());
-            stmt.setLong(6, uid);
-            stmt.setLong(7, uid);
-
-            int rowCount2 = stmt.executeUpdate();
-            if (rowCount2 == 0) {
-                throw new DAOException("Can't insert the DDA account to TBL_CLIENT_SVC_DDA_ID_X_BANK_ACCT table.");
-            }
-        }
-
-    } catch (SQLException e) {
-        throw new DAOException("SQL Exception: " + e.getMessage());
-    } catch (Exception e) {
-        throw new DAOException("System Exception: " + e.getMessage());
+    if (envName != null) {
+        propFile = envName + "_env.properties";
+    } else {
+        propFile = "dev_ws_env.properties";
     }
 
-    return detail;
+    Logger.info("env properties file name ==> " + propFile);
+
+    try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("/WEB-INF/" + propFile)) {
+        if (is == null) {
+            throw new FileNotFoundException("Property file not found: " + propFile);
+        }
+        props.load(is);
+    } catch (Exception ex) {
+        Logger.error("failed to load properties.");
+        throw new Exception("Error: failed to load properties.", ex);
+    }
+
+    return props;
 }
